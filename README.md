@@ -18,6 +18,7 @@ git commit -m "commit message"  , commit message should follow the following con
 once rebased , you can now push your branch if you are done with your feature
 
 **Commands to run the project:**
+
 pip install -r requirements.txt
 
 backend:
