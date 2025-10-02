@@ -22,14 +22,12 @@ once rebased , you can now push your branch if you are done with your feature
 cd backend =>
 pip install -r requirements.txt
 
-backend:
-
+-backend:
 cd backend =>
 uvicorn main:app --reload
 
-forntend:
-
+-forntend:
 cd frontend =>
 npm install   # first time only
-npm run dev
+--npm run dev
 
