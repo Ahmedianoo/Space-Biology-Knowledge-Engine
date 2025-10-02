@@ -12,6 +12,8 @@ alembic
 # ---- Scraping ----
 requests
 beautifulsoup4
+lxml 
+pandas 
 
 # ---- LLM + LangChain ----
 langchain
@@ -24,5 +26,5 @@ pymilvus
 # ---- Utils ----
 httpx
 tenacity
-
+ 
 

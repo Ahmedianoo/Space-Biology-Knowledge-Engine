@@ -22,6 +22,9 @@ class Publication(Base):
     year = Column(Integer, nullable=True)
     # mission_type = Column(String, nullable=True)   # e.g., Mars, Lunar, ISS
     # organism = Column(String, nullable=True)       # e.g., plant, human, bacteria
+    journal = Column(String, nullable=True)
+    date = Column(String, nullable=True)
+    authors = Column(JSONB, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     # relationships
