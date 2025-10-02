@@ -19,17 +19,17 @@ once rebased , you can now push your branch if you are done with your feature
 
 **Commands to run the project:**
 
-cd backend
+cd backend =>
 pip install -r requirements.txt
 
 backend:
 
-cd backend
+cd backend =>
 uvicorn main:app --reload
 
 forntend:
 
-cd frontend
+cd frontend =>
 npm install   # first time only
 npm run dev
 
