@@ -1,7 +1,7 @@
 # Space-Biology-Knowledge-Engine
 
 
-##please follow this git flow
+**please follow this git flow**
 1) pull latest main from origin 
 2) checkout main
 3) create a new branch using [ git checkout -b branchname ]
