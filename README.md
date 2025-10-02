@@ -17,17 +17,21 @@ git commit -m "commit message"  , commit message should follow the following con
 7) you need then to make sure you are checked out on your feature branch , then apply -->  git rebase origin/main , this will update the base of your branch , as if you opened your branch from the latest commit on the main branch
 once rebased , you can now push your branch if you are done with your feature
 
-## Commands to Run the Project
+**Commands to run the project:**
 
 backend:
+'''bash
 cd backend
 pip install -r requirements.txt
 uvicorn main:app --reload
+...
 
-frontend:
+forntend:
+'''bash
 cd frontend
 npm install   # first time only
 npm run dev
+'''
 
 
 
