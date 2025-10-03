@@ -1,5 +1,5 @@
 # .github/workflows/gigalixir-fastapi.yml
-name: Deploy FastAPI to Gigalixir (credential helper, no extra files)
+name: Deploy FastAPI to Gigalixir (hardcoded creds; no extra files)
 
 on:
   push:
@@ -14,8 +14,12 @@ jobs:
 
       # Create a Procfile only for this deploy (not pushed back to GitHub)
       - name: Create Procfile (temp)
+        shell: bash
         run: |
-          echo 'web: uvicorn main:app --host=0.0.0.0 --port=$PORT' > Procfile
+          cat > Procfile <<'EOF'
+          web: uvicorn main:app --host=0.0.0.0 --port=$PORT
+          EOF
+
 
       - name: Temp commit
         run: |
@@ -24,22 +28,28 @@ jobs:
           git add Procfile
           git commit -m "ci: temp Procfile for Gigalixir deploy" || true
 
-      # Configure a one-off credential store file in the workspace
+      # --- HARD-CODED VALUES (REPLACE THESE) ---
+      - name: Define credentials and app
+        run: |
+          echo "GIGALIXIR_EMAIL=aliniazi2005@gmail.com" >> $GITHUB_ENV
+          echo "GIGALIXIR_API_KEY=233c11c5-fc86-43f3-b253-caacf0a53022" >> $GITHUB_ENV
+          echo "GIGALIXIR_APP=nasa-space-apps" >> $GITHUB_ENV
+      # -----------------------------------------
+
+      # Configure a workspace-local credential store
       - name: Configure Git credential helper (workspace-local)
-        run: |
-          git config --global credential.helper "store --file .git-credentials"
+        run: git config --global credential.helper "store --file .git-credentials"
 
-      # Pre-approve credentials for git.gigalixir.com (no prompts)
-      - name: Approve credentials for git.gigalixir.com
+      # Pre-approve credentials for git.gigalixir.com so Git won't prompt
+      - name: Approve credentials for Git
         run: |
-          printf "protocol=https\nhost=git.gigalixir.com\npath=%s.git\nusername=%s\npassword=%s\n" \
-            "$GIGALIXIR_APP" "$GIGALIXIR_EMAIL" "$GIGALIXIR_API_KEY" | git credential approve
-        env:
-          GIGALIXIR_EMAIL: ${{ secrets.GIGALIXIR_EMAIL }}
-          GIGALIXIR_API_KEY: ${{ secrets.GIGALIXIR_API_KEY }}
-          GIGALIXIR_APP: ${{ secrets.GIGALIXIR_APP }}
+          # Approve for both <app>.git and <app> path patterns
+          for p in "${GIGALIXIR_APP}.git" "${GIGALIXIR_APP}"; do
+            printf "protocol=https\nhost=git.gigalixir.com\npath=%s\nusername=%s\npassword=%s\n\n" \
+              "$p" "$GIGALIXIR_EMAIL" "$GIGALIXIR_API_KEY" | git credential approve
+          done
 
-      - name: Add Gigalixir remote (clean URL)
+      - name: Add Gigalixir remote
         run: |
           git remote remove gigalixir 2>/dev/null || true
           git remote add gigalixir "https://git.gigalixir.com/${GIGALIXIR_APP}.git"
