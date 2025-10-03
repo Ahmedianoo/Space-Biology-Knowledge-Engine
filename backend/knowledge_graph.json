@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "id": "5faafd46-1ffe-4cee-88bf-b4409f556f96",
+      "title": "Microfluidics-integrated spaceflight hardware for measuring muscle strength of Caenorhabditis elegans on the International Space Station.",
+      "summary": "Summary not available"
+    },
+    {
+      "id": "9d8391f3-41f4-48fb-b17c-93b724bda189",
+      "title": "Microgravity validation of a novel system for RNA isolation and multiplex quantitative real time PCR analysis of gene expression on the International Space Station",
+      "summary": "Summary not available"
+    },
+    {
+      "id": "fd56a129-6d6b-41de-9264-cfc4d8c6642e",
+      "title": "Stem Cell Health and Tissue Regeneration in Microgravity",
+      "summary": "Summary not available"
+    },
+    {
+      "id": "130edc83-6a66-43da-bd82-e27fb9e97e8a",
+      "title": "Understanding macrophage differentiation during space flight: The importance of ground-based experiments before space flight",
+      "summary": "Summary not available"
+    },
+    {
+      "id": "5a63bcc8-c496-4598-b680-746b14c391a9",
+      "title": "Prolonged Exposure to Microgravity Reduces Cardiac Contractility and Initiates Remodeling in Drosophila",
+      "summary": "Summary not available"
+    },
+    {
+      "id": "1c4c0224-5b3f-4e41-903b-29d6307805c8",
+      "title": "Simulated Microgravity Enhances Oligodendrocyte Mitochondrial Function and Lipid Metabolism",
+      "summary": "Summary not available"
+    }
+  ],
+  "edges": [
+    {
+      "source": "5faafd46-1ffe-4cee-88bf-b4409f556f96",
+      "target": "9d8391f3-41f4-48fb-b17c-93b724bda189",
+      "weight": 0.5128829479217529
+    },
+    {
+      "source": "5faafd46-1ffe-4cee-88bf-b4409f556f96",
+      "target": "fd56a129-6d6b-41de-9264-cfc4d8c6642e",
+      "weight": 0.4778100252151489
+    },
+    {
+      "source": "5faafd46-1ffe-4cee-88bf-b4409f556f96",
+      "target": "130edc83-6a66-43da-bd82-e27fb9e97e8a",
+      "weight": 0.47625958919525146
+    },
+    {
+      "source": "5faafd46-1ffe-4cee-88bf-b4409f556f96",
+      "target": "5a63bcc8-c496-4598-b680-746b14c391a9",
+      "weight": 0.456942081451416
+    },
+    {
+      "source": "5faafd46-1ffe-4cee-88bf-b4409f556f96",
+      "target": "1c4c0224-5b3f-4e41-903b-29d6307805c8",
+      "weight": 0.4441000819206238
+    }
+  ]
+}
