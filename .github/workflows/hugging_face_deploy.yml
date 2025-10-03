@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- HARD-CODED VALUES (⚠️ anyone with repo read access can see/use these) ---
+      # --- HARD-CODED VALUES (⚠️ not safe, better use GH secrets) ---
       - name: Define HF credentials and target
         run: |
           echo "HF_TOKEN=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" >> $GITHUB_ENV
@@ -44,27 +44,20 @@ jobs:
           cat > Dockerfile <<'EOF'
           FROM python:3.11-slim
 
-          # Non-root user as recommended
           RUN useradd -m user
           WORKDIR /app
 
-          # Install dependencies first (backend reqs)
           COPY backend/requirements.txt /app/requirements.txt
           RUN pip install --no-cache-dir -r /app/requirements.txt
 
-          # Copy project
           COPY . /app
           USER user
 
-          # Spaces expect app to listen on 7860 (or set app_port in README)
           EXPOSE 7860
-
-          # Start FastAPI; --app-dir adds backend/ so "from routes ..." works
           CMD ["uvicorn", "--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "7860"]
           EOF
 
-      # === PATCH STARTS HERE ===
-      # Install HF CLI + Git LFS (push/builds require proper auth; LFS for large files)
+      # Install HF CLI + Git LFS
       - name: Install huggingface_hub CLI and Git LFS
         run: |
           python -m pip install --upgrade pip
@@ -72,15 +65,14 @@ jobs:
           sudo apt-get update && sudo apt-get install -y git-lfs
           git lfs install
 
-      # Log in non-interactively and register token as a Git credential (for Git & LFS)
+      # Log in to HF and add token as Git credential
       - name: Hugging Face login (Git credential)
         env:
           HF_TOKEN: ${{ env.HF_TOKEN }}
         run: |
-          echo "${HF_TOKEN}" | huggingface-cli login --token --add-to-git-credential --stdin
-      # === PATCH ENDS HERE ===
+          echo "${HF_TOKEN}" | huggingface-cli login --stdin --add-to-git-credential
 
-      # Push to the Space repo (build will start on HF)
+      # Push to the Space repo (this triggers a build on Hugging Face)
       - name: Push to Hugging Face Space
         env:
           HF_USERNAME: ${{ env.HF_USERNAME }}
@@ -92,5 +84,4 @@ jobs:
 
           git remote remove space 2>/dev/null || true
           git remote add space "https://huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME}.git"
-
           git push space HEAD:main --force
