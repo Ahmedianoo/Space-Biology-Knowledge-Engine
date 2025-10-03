@@ -1,0 +1,87 @@
+# .github/workflows/deploy-hf-space.yml
+name: Deploy to Hugging Face Space (Docker, hardcoded creds)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # --- HARD-CODED VALUES (⚠️ anyone with repo read access can see/use these) ---
+      - name: Define HF credentials and target
+        run: |
+          echo "HF_TOKEN=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" >> $GITHUB_ENV
+          echo "HF_USERNAME=AliNiazi1" >> $GITHUB_ENV
+          echo "SPACE_NAME=Nasa-space-apps" >> $GITHUB_ENV
+
+      # (Optional) hard-code runtime app secrets (NOT recommended)
+      # - name: Bake runtime env (optional, insecure)
+      #   run: |
+      #     echo "GROQ_API_KEY=your_groq_key" >> $GITHUB_ENV
+
+      # README front-matter so the Space is recognized as Docker and listens on 7860
+      - name: Add README front-matter for Docker Space (temp)
+        run: |
+          cat > README.md <<'EOF'
+          ---
+          title: Space Biology API
+          emoji: 🛰️
+          colorFrom: indigo
+          colorTo: pink
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+          FastAPI backend deployed as a Docker Space.
+          EOF
+
+      # Dockerfile that installs backend requirements and runs uvicorn on 7860
+      - name: Add Dockerfile (temp)
+        run: |
+          cat > Dockerfile <<'EOF'
+          FROM python:3.11-slim
+
+          # Non-root user as recommended
+          RUN useradd -m user
+          WORKDIR /app
+
+          # Install dependencies first (backend reqs)
+          COPY backend/requirements.txt /app/requirements.txt
+          RUN pip install --no-cache-dir -r /app/requirements.txt
+
+          # Copy project
+          COPY . /app
+          USER user
+
+          # Spaces expect app to listen on 7860 (or set app_port in README)
+          EXPOSE 7860
+
+          # Start FastAPI; --app-dir adds backend/ so "from routes ..." works
+          CMD ["uvicorn", "--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+          EOF
+
+      # Push to the Space repo using HF token in an HTTP header
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ env.HF_TOKEN }}
+          HF_USERNAME: ${{ env.HF_USERNAME }}
+          SPACE_NAME: ${{ env.SPACE_NAME }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git remote remove space 2>/dev/null || true
+          git remote add space "https://huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME}.git"
+
+          # push HEAD to Space:main with Bearer token auth
+          git -c "http.extraheader=AUTHORIZATION: Bearer ${HF_TOKEN}" \
+              push space HEAD:main --force
