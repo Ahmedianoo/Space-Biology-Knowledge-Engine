@@ -51,6 +51,7 @@ class Summary(Base):
     scientist_summary = Column(Text, nullable=True)
     manager_summary = Column(Text, nullable=True)
     mission_architect_summary = Column(Text, nullable=True)
+    section_summary = Column(Text, nullable=True)  # {section_name: summary_text}
     # metadata = Column(JSONB, nullable=True)  # store extra info like version, LLM model used
     created_at = Column(TIMESTAMP, server_default=func.now())
 
