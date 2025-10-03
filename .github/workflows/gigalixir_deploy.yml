@@ -14,6 +14,17 @@ jobs:
         with:
           fetch-depth: 0   # fetch all history so pushes aren’t shallow
 
+      # Create requirements.txt only if it's missing (buildpack detection)
+      - name: Create requirements.txt (temp if missing)
+        shell: bash
+        run: |
+          if [ ! -f requirements.txt ]; then
+            cat > requirements.txt <<'EOF'
+            fastapi
+            uvicorn
+            EOF
+          fi
+
       # Create a Procfile only for this deploy (not pushed back to GitHub)
       - name: Create Procfile (temp)
         shell: bash
@@ -22,13 +33,12 @@ jobs:
           web: uvicorn main:app --host=0.0.0.0 --port=$PORT
           EOF
 
-
       - name: Temp commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Procfile
-          git commit -m "ci: temp Procfile for Gigalixir deploy" || true
+          git add Procfile requirements.txt
+          git commit -m "ci: temp Procfile/requirements for Gigalixir deploy" || true
 
       # --- HARD-CODED VALUES (REPLACE THESE) ---
       - name: Define credentials and app
