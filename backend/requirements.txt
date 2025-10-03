@@ -21,10 +21,10 @@ langchain-community
 langchain-core
 langchain-groq
 langchain-google-genai
-langgraph 
+langgraph
 pymilvus
 tiktoken
-
+transformers
 # ---- Utils ----
 httpx
 tenacity

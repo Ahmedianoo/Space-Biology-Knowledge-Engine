@@ -15,7 +15,7 @@ from langchain_groq import ChatGroq
 
 # 🔑 LLM Setup
 llm = ChatGroq(
-    model="openai/gpt-oss-120b",
+    model="qwen/qwen3-32b",
     temperature=0,
     max_tokens=None,
     reasoning_format="parsed",
