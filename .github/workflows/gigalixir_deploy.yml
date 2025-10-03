@@ -19,19 +19,14 @@ jobs:
         shell: bash
         run: |
           if [ ! -f requirements.txt ]; then
-            cat > requirements.txt <<'EOF'
-            fastapi
-            uvicorn
-            EOF
+            printf '%s\n' 'fastapi' 'uvicorn' > requirements.txt
           fi
 
       # Create a Procfile only for this deploy (not pushed back to GitHub)
       - name: Create Procfile (temp)
         shell: bash
         run: |
-          cat > Procfile <<'EOF'
-          web: uvicorn main:app --host=0.0.0.0 --port=$PORT
-          EOF
+          printf '%s\n' 'web: uvicorn main:app --host=0.0.0.0 --port=$PORT' > Procfile
 
       - name: Temp commit
         run: |
