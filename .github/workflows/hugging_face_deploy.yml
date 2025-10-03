@@ -15,14 +15,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- HARD-CODED VALUES (⚠️ not safe, better use GH secrets) ---
+      # ⚠️ Hardcoded creds (rotate later; prefer GH Secrets)
       - name: Define HF credentials and target
         run: |
           echo "HF_TOKEN=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" >> $GITHUB_ENV
           echo "HF_USERNAME=AliNiazi1" >> $GITHUB_ENV
           echo "SPACE_NAME=Nasa-space-apps" >> $GITHUB_ENV
 
-      # README front-matter so the Space is recognized as Docker and listens on 7860
+      # Minimal README front-matter so the Space is recognized as Docker and uses port 7860
       - name: Add README front-matter for Docker Space (temp)
         run: |
           cat > README.md <<'EOF'
@@ -38,26 +38,30 @@ jobs:
           FastAPI backend deployed as a Docker Space.
           EOF
 
-      # Dockerfile that installs backend requirements and runs uvicorn on 7860
+      # Dockerfile: install deps, copy app, run FastAPI on 7860
       - name: Add Dockerfile (temp)
         run: |
           cat > Dockerfile <<'EOF'
           FROM python:3.11-slim
-
           RUN useradd -m user
           WORKDIR /app
 
+          # Install dependencies first (backend/requirements.txt exists in your tree)
           COPY backend/requirements.txt /app/requirements.txt
           RUN pip install --no-cache-dir -r /app/requirements.txt
 
+          # Copy project
           COPY . /app
           USER user
 
+          # Spaces expect the app to listen on 7860 (or set app_port in README)
           EXPOSE 7860
+
+          # Start FastAPI; --app-dir adds backend/ so "from routes ..." works
           CMD ["uvicorn", "--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "7860"]
           EOF
 
-      # Install HF CLI + Git LFS
+      # Install HF CLI + Git LFS (LFS is required for files >10MB)
       - name: Install huggingface_hub CLI and Git LFS
         run: |
           python -m pip install --upgrade pip
@@ -65,14 +69,14 @@ jobs:
           sudo apt-get update && sudo apt-get install -y git-lfs
           git lfs install
 
-      # Log in to HF and add token as Git credential
+      # ✅ Non-interactive login: pass the token as a flag and store it as a Git credential
       - name: Hugging Face login (Git credential)
         env:
           HF_TOKEN: ${{ env.HF_TOKEN }}
         run: |
-          echo "${HF_TOKEN}" | huggingface-cli login --stdin --add-to-git-credential
+          huggingface-cli login --token "${HF_TOKEN}" --add-to-git-credential
 
-      # Push to the Space repo (this triggers a build on Hugging Face)
+      # Push to the Space repo (triggers Space build)
       - name: Push to Hugging Face Space
         env:
           HF_USERNAME: ${{ env.HF_USERNAME }}
