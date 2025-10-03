@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- Hardcoded creds (⚠️ unsafe; better to use GH Secrets) ---
+      # --- Hardcoded creds (⚠️ unsafe; prefer GH Secrets) ---
       - name: Define HF credentials and target
         run: |
           echo "HF_TOKEN=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" >> $GITHUB_ENV
@@ -51,22 +51,16 @@ jobs:
           CMD ["uvicorn", "--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "7860"]
           EOF
 
-      # Install Git LFS (needed if your repo has >10MB files)
+      # Install Git LFS (Spaces uses LFS for files >10MB)
       - name: Install Git LFS
         run: |
           sudo apt-get update && sudo apt-get install -y git-lfs
           git lfs install
 
-      # Configure Git to send the token in HTTP headers
-      - name: Configure Git auth header
-        env:
-          HF_TOKEN: ${{ env.HF_TOKEN }}
-        run: |
-          git config --global http.https://huggingface.co/.extraheader "AUTHORIZATION: Bearer ${HF_TOKEN}"
-          git config --global lfs.https://huggingface.co/.extraheader "AUTHORIZATION: Bearer ${HF_TOKEN}"
-
+      # Push to the Space repo (use PAT in URL so Git won't prompt)
       - name: Push to Hugging Face Space
         env:
+          HF_TOKEN: ${{ env.HF_TOKEN }}
           HF_USERNAME: ${{ env.HF_USERNAME }}
           SPACE_NAME: ${{ env.SPACE_NAME }}
         run: |
@@ -75,5 +69,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git remote remove space 2>/dev/null || true
-          git remote add space "https://huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME}.git"
+          # Embed <username>:<token> in the remote URL (officially supported)
+          git remote add space "https://${HF_USERNAME}:${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME}.git"
+
           git push space HEAD:main --force
