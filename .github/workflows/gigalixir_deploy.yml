@@ -1,5 +1,5 @@
 # .github/workflows/gigalixir-fastapi.yml
-name: Deploy FastAPI to Gigalixir (HTTPS header auth, no extra files)
+name: Deploy FastAPI to Gigalixir (credential helper, no extra files)
 
 on:
   push:
@@ -16,6 +16,7 @@ jobs:
       - name: Create Procfile (temp)
         run: |
           echo 'web: uvicorn main:app --host=0.0.0.0 --port=$PORT' > Procfile
+
       - name: Temp commit
         run: |
           git config user.name "github-actions[bot]"
@@ -23,35 +24,35 @@ jobs:
           git add Procfile
           git commit -m "ci: temp Procfile for Gigalixir deploy" || true
 
-      # Build Basic-auth header: base64("email:api_key") with no newline
-      - name: Build Authorization header
+      # Configure a one-off credential store file in the workspace
+      - name: Configure Git credential helper (workspace-local)
         run: |
-          AUTH=$(printf '%s:%s' "$GIGALIXIR_EMAIL" "$GIGALIXIR_API_KEY" | base64 | tr -d '\n')
-          echo "AUTH=$AUTH" >> "$GITHUB_ENV"
+          git config --global credential.helper "store --file .git-credentials"
+
+      # Pre-approve credentials for git.gigalixir.com (no prompts)
+      - name: Approve credentials for git.gigalixir.com
+        run: |
+          printf "protocol=https\nhost=git.gigalixir.com\npath=%s.git\nusername=%s\npassword=%s\n" \
+            "$GIGALIXIR_APP" "$GIGALIXIR_EMAIL" "$GIGALIXIR_API_KEY" | git credential approve
         env:
           GIGALIXIR_EMAIL: ${{ secrets.GIGALIXIR_EMAIL }}
           GIGALIXIR_API_KEY: ${{ secrets.GIGALIXIR_API_KEY }}
+          GIGALIXIR_APP: ${{ secrets.GIGALIXIR_APP }}
 
-      - name: Add Gigalixir remote (no creds in URL)
+      - name: Add Gigalixir remote (clean URL)
         run: |
           git remote remove gigalixir 2>/dev/null || true
           git remote add gigalixir "https://git.gigalixir.com/${GIGALIXIR_APP}.git"
           git remote -v
-        env:
-          GIGALIXIR_APP: ${{ secrets.GIGALIXIR_APP }}
 
-      - name: Push to Gigalixir (deploy) with header auth and branch fallback
+      - name: Push to Gigalixir (deploy) with branch fallback
         run: |
           set -e
-          if git -c "http.extraheader=Authorization: Basic ${AUTH}" \
-               push gigalixir HEAD:main --force; then
+          if git push gigalixir HEAD:main --force; then
             echo "Deployed to 'main'"
-          elif git -c "http.extraheader=Authorization: Basic ${AUTH}" \
-               push gigalixir HEAD:master --force; then
+          elif git push gigalixir HEAD:master --force; then
             echo "Deployed to 'master'"
           else
             echo "Push failed to both 'main' and 'master'." >&2
             exit 1
           fi
-        env:
-          AUTH: ${{ env.AUTH }}
