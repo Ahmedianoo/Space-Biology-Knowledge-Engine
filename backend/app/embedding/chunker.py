@@ -6,7 +6,7 @@ def chunk_text(
     title: str, 
     date: str, 
     section_name: str, 
-    chunk_size: int = 500, 
+    chunk_size: int = 750, 
     overlap: int = 50
 ) -> List[str]:
     """Split text into overlapping chunks and prepend metadata into each chunk."""
