@@ -16,8 +16,8 @@ app.add_middleware(
 
 app.include_router(chat_router)
 
-app.include_router(user.router, prefix="/user")
-app.include_router(api.router, prefix="/api")
+app.include_router(user.router)
+app.include_router(api.router)
 
 @app.get('/')
 def hello_world():
