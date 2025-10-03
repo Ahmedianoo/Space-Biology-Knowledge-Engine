@@ -37,13 +37,14 @@ jobs:
             printf '%s\n' 'fastapi' 'uvicorn' > requirements.txt
           fi
 
-      # Create Procfile using APP_IMPORT (temp)
       - name: Create Procfile (temp)
         shell: bash
+        env:
+          APP_IMPORT: backend.main:app   # change if your entry is different
         run: |
-          # Use ${APP_IMPORT} here; escape $PORT so it stays literal for the dyno
-          printf '%s\n' "web: uvicorn backend.main:app --host=0.0.0.0 --port=$PORT" > Procfile
-
+          # Expand ${PORT} at RUNTIME, not now. Default to 4000 if missing.
+          printf '%s\n' "web: bash -lc 'uvicorn ${APP_IMPORT} --host=0.0.0.0 --port=\${PORT:-4000}'" > Procfile
+    
       - name: Temp commit
         run: |
           git config user.name "github-actions[bot]"
