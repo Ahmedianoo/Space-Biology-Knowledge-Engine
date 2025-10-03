@@ -13,6 +13,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0   # fetch all history so pushes aren’t shallow
+          
+      - name: Create .python-version (temp)
+        shell: bash
+        run: |
+          printf '%s\n' '3.13.1' > .python-version    
 
       # Create requirements.txt only if it's missing (buildpack detection)
       - name: Create requirements.txt (temp if missing)
