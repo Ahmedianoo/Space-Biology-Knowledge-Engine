@@ -26,11 +26,12 @@ jobs:
         run: |
           printf '%s\n' '3.13.1' > .python-version
 
-      # Create requirements.txt only if missing (temp)
-      - name: Create requirements.txt (temp if missing)
+      - name: Use backend/requirements.txt for buildpack
         shell: bash
         run: |
-          if [ ! -f requirements.txt ]; then
+          if [ -f backend/requirements.txt ]; then
+            cp backend/requirements.txt ./requirements.txt
+          else
             printf '%s\n' 'fastapi' 'uvicorn' > requirements.txt
           fi
 
@@ -39,7 +40,7 @@ jobs:
         shell: bash
         run: |
           # Use ${APP_IMPORT} here; escape $PORT so it stays literal for the dyno
-          printf '%s\n' "web: uvicorn ${APP_IMPORT} --host=0.0.0.0 --port=\$PORT" > Procfile
+          printf '%s\n' "web: uvicorn backend.main:app --host=0.0.0.0 --port=$PORT" > Procfile
 
       - name: Temp commit
         run: |
