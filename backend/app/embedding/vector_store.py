@@ -2,6 +2,7 @@ from pymilvus import connections, Collection, FieldSchema, CollectionSchema, Dat
 import uuid
 import os
 from dotenv import load_dotenv
+from app.embedding.embed import get_embedding
 
 load_dotenv()
 
@@ -60,3 +61,58 @@ def insert_chunks(pub_id: str, title: str, date: str, section_name: str, chunks:
     ]
     col.insert(data)
     col.flush()
+
+
+
+
+
+
+
+
+
+def semantic_search(query: str, top_k: int = 5):
+    """
+    Perform semantic search on publication chunks.
+
+    Returns a list of dictionaries with:
+    - publication_id
+    - title
+    - date
+    - section_name
+    - text
+    - score (similarity)
+    """
+    # Encode the query
+    query_embedding = get_embedding(query)
+
+    # Load the collection
+    col = Collection(COLLECTION_NAME)
+    col.load()  # always load before search
+
+    # Perform search
+    search_params = {"metric_type": "COSINE", "params": {"ef": 64}}
+    results = col.search(
+        data=[query_embedding],
+        anns_field="embedding",
+        param=search_params,
+        limit=top_k,
+        expr=None,  # Optional: add filters here
+        output_fields=["publication_id", "title", "date", "section_name", "text"]
+    )
+
+    # Parse results
+    top_results = []
+    for hits in results:
+        for hit in hits:
+            top_results.append({
+                "publication_id": hit.entity.get("publication_id"),
+                "title": hit.entity.get("title"),
+                "date": hit.entity.get("date"),
+                "section_name": hit.entity.get("section_name"),
+                "text": hit.entity.get("text"),
+                "score": hit.score
+            })
+
+    return top_results
+
+    
