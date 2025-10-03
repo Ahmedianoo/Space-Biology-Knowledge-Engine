@@ -2,8 +2,10 @@
 name: Deploy FastAPI to Gigalixir (hardcoded creds; no extra files)
 
 on:
+  workflow_dispatch: 
   push:
     branches: [ "main" ]
+       
 
 jobs:
   deploy:
