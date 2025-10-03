@@ -26,11 +26,12 @@ jobs:
         run: |
           printf '%s\n' '3.13.1' > .python-version
 
-      # Create requirements.txt only if missing (temp)
-      - name: Create requirements.txt (temp if missing)
+      - name: Use backend/requirements.txt for buildpack
         shell: bash
         run: |
-          if [ ! -f requirements.txt ]; then
+          if [ -f backend/requirements.txt ]; then
+            cp backend/requirements.txt ./requirements.txt
+          else
             printf '%s\n' 'fastapi' 'uvicorn' > requirements.txt
           fi
 
