@@ -49,9 +49,9 @@ class Summary(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     publication_id = Column(UUID(as_uuid=True), ForeignKey("publications.id", ondelete="CASCADE"))
-    scientist_summary = Column(Text, nullable=True)
-    manager_summary = Column(Text, nullable=True)
-    mission_architect_summary = Column(Text, nullable=True)
+    scientist_summary = Column(JSONB, nullable=True)
+    manager_summary = Column(JSONB, nullable=True)
+    mission_architect_summary = Column(JSONB, nullable=True)
       # {section_name: summary_text}
     # metadata = Column(JSONB, nullable=True)  # store extra info like version, LLM model used
     created_at = Column(TIMESTAMP, server_default=func.now())
