@@ -12,8 +12,8 @@ alembic
 # ---- Scraping ----
 requests
 beautifulsoup4
-lxml 
-pandas 
+lxml
+pandas
 
 # ---- LLM + LangChain ----
 langchain
@@ -21,10 +21,12 @@ langchain-community
 langchain-core
 langchain-groq
 langchain-google-genai
+langgraph 
 pymilvus
+tiktoken
 
 # ---- Utils ----
 httpx
 tenacity
- 
+
 
