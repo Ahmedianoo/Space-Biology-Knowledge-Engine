@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # fetch all history so pushes aren’t shallow
 
       # Create a Procfile only for this deploy (not pushed back to GitHub)
       - name: Create Procfile (temp)
