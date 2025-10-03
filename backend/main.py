@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routes import user 
+from routes import api
 
 app = FastAPI()
 
@@ -10,6 +12,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(user.router, prefix="/user")
+app.include_router(api.router, prefix="/api")
 
 @app.get("/")
 def hello_world():
