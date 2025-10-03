@@ -1,0 +1,66 @@
+# .github/workflows/gigalixir-fastapi.yml
+name: Deploy FastAPI to Gigalixir (HTTPS auth, no extra files)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Create a Procfile only for this deploy (not pushed back to GitHub)
+      - name: Create Procfile (temp)
+        run: |
+          echo 'web: uvicorn main:app --host=0.0.0.0 --port=$PORT' > Procfile
+        # Why Procfile? Buildpack web dynos must bind $PORT:
+        # https://devcenter.heroku.com/articles/procfile
+        # (Gigalixir follows Heroku-style buildpacks and git-push deploys:
+        # https://www.gigalixir.com/docs/deploy/ )
+
+      - name: Make a temporary commit (local only)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Procfile
+          git commit -m "ci: temp Procfile for Gigalixir deploy" || true
+
+      # ✅ Encode BOTH username (email) and password (API key) safely for URL
+      - name: Encode credentials for HTTPS remote (no heredocs)
+        run: |
+          ENCODED_EMAIL=$(python3 -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["GIGALIXIR_EMAIL"]))')
+          ENCODED_PASS=$(python3 -c 'import os,urllib.parse; print(urllib.parse.quote(os.environ["GIGALIXIR_API_KEY"]))')
+          echo "ENCODED_EMAIL=$ENCODED_EMAIL" >> "$GITHUB_ENV"
+          echo "ENCODED_PASS=$ENCODED_PASS" >> "$GITHUB_ENV"
+        env:
+          GIGALIXIR_EMAIL: ${{ secrets.GIGALIXIR_EMAIL }}
+          GIGALIXIR_API_KEY: ${{ secrets.GIGALIXIR_API_KEY }}
+        # Why encode? '@' and other reserved chars must be percent-encoded in userinfo:
+        # RFC 3986: https://www.rfc-editor.org/rfc/rfc3986
+
+      - name: Add Gigalixir HTTPS remote with inline credentials
+        run: |
+          git remote remove gigalixir 2>/dev/null || true
+          git remote add gigalixir "https://${ENCODED_EMAIL}:${ENCODED_PASS}@git.gigalixir.com/${GIGALIXIR_APP}.git"
+          git remote -v
+        env:
+          ENCODED_EMAIL: ${{ env.ENCODED_EMAIL }}
+          ENCODED_PASS: ${{ env.ENCODED_PASS }}
+          GIGALIXIR_APP: ${{ secrets.GIGALIXIR_APP }}
+        # Deploys are normal git pushes to the app repo:
+        # https://www.gigalixir.com/docs/deploy/
+
+      - name: Push to Gigalixir (deploy) with branch fallback
+        run: |
+          set -e
+          if git push gigalixir HEAD:main --force; then
+            echo "Deployed to 'main'"
+          elif git push gigalixir HEAD:master --force; then
+            echo "Deployed to 'master'"
+          else
+            echo "Push failed to both 'main' and 'master'." >&2
+            exit 1
+          fi
