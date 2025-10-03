@@ -8,18 +8,25 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    # 👉 Set your FastAPI import path here once
+    #    Examples: "main:app" or "src.main:app" or "app.server:api"
+    env:
+      APP_IMPORT: backend.main:app
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # fetch all history so pushes aren’t shallow
-          
+          fetch-depth: 0   # full history so pushes aren’t shallow
+
+      # Pin Python (temp). If the stack doesn't support 3.13.1 yet, use 3.13 or 3.12.x.
       - name: Create .python-version (temp)
         shell: bash
         run: |
-          printf '%s\n' '3.13.1' > .python-version    
+          printf '%s\n' '3.13.1' > .python-version
 
-      # Create requirements.txt only if it's missing (buildpack detection)
+      # Create requirements.txt only if missing (temp)
       - name: Create requirements.txt (temp if missing)
         shell: bash
         run: |
@@ -27,20 +34,21 @@ jobs:
             printf '%s\n' 'fastapi' 'uvicorn' > requirements.txt
           fi
 
-      # Create a Procfile only for this deploy (not pushed back to GitHub)
+      # Create Procfile using APP_IMPORT (temp)
       - name: Create Procfile (temp)
         shell: bash
         run: |
-          printf '%s\n' 'web: uvicorn main:app --host=0.0.0.0 --port=$PORT' > Procfile
+          # Use ${APP_IMPORT} here; escape $PORT so it stays literal for the dyno
+          printf '%s\n' "web: uvicorn ${APP_IMPORT} --host=0.0.0.0 --port=\$PORT" > Procfile
 
       - name: Temp commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Procfile requirements.txt
-          git commit -m "ci: temp Procfile/requirements for Gigalixir deploy" || true
+          git add .python-version Procfile requirements.txt
+          git commit -m "ci: temp py version / Procfile / requirements for Gigalixir deploy" || true
 
-      # --- HARD-CODED VALUES (REPLACE THESE) ---
+      # --- HARD-CODED VALUES (⚠️ security risk; prefer Actions Secrets) ---
       - name: Define credentials and app
         run: |
           echo "GIGALIXIR_EMAIL=aliniazi2005@gmail.com" >> $GITHUB_ENV
@@ -52,10 +60,9 @@ jobs:
       - name: Configure Git credential helper (workspace-local)
         run: git config --global credential.helper "store --file .git-credentials"
 
-      # Pre-approve credentials for git.gigalixir.com so Git won't prompt
+      # Pre-approve credentials so Git won't prompt
       - name: Approve credentials for Git
         run: |
-          # Approve for both <app>.git and <app> path patterns
           for p in "${GIGALIXIR_APP}.git" "${GIGALIXIR_APP}"; do
             printf "protocol=https\nhost=git.gigalixir.com\npath=%s\nusername=%s\npassword=%s\n\n" \
               "$p" "$GIGALIXIR_EMAIL" "$GIGALIXIR_API_KEY" | git credential approve
@@ -78,3 +85,4 @@ jobs:
             echo "Push failed to both 'main' and 'master'." >&2
             exit 1
           fi
+
