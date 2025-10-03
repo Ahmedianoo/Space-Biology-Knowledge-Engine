@@ -39,6 +39,7 @@ class PublicationSection(Base):
     publication_id = Column(UUID(as_uuid=True), ForeignKey("publications.id", ondelete="CASCADE"))
     section_name = Column(String, nullable=False)   # Abstract, Intro, Results...
     section_text = Column(Text, nullable=False)
+    section_summary = Column(Text, nullable=True)
 
     publication = relationship("Publication", back_populates="sections")
 
@@ -51,7 +52,7 @@ class Summary(Base):
     scientist_summary = Column(Text, nullable=True)
     manager_summary = Column(Text, nullable=True)
     mission_architect_summary = Column(Text, nullable=True)
-    section_summary = Column(Text, nullable=True)  # {section_name: summary_text}
+      # {section_name: summary_text}
     # metadata = Column(JSONB, nullable=True)  # store extra info like version, LLM model used
     created_at = Column(TIMESTAMP, server_default=func.now())
 
