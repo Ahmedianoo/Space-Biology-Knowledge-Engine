@@ -16,7 +16,6 @@ EMBEDDING_DIM = 384  # MiniLM output size
 
 def create_collection_if_not_exists():
     if utility.has_collection(COLLECTION_NAME):
-        # ✅ check schema to avoid dim mismatch
         col = Collection(COLLECTION_NAME)
         for f in col.schema.fields:
             if f.name == "embedding" and f.params.get("dim") != EMBEDDING_DIM:
@@ -24,12 +23,13 @@ def create_collection_if_not_exists():
                 utility.drop_collection(COLLECTION_NAME)
                 break
         else:
-            # correct schema, nothing to do
             return
 
     fields = [
         FieldSchema(name="id", dtype=DataType.VARCHAR, max_length=36, is_primary=True),
         FieldSchema(name="publication_id", dtype=DataType.VARCHAR, max_length=36),
+        FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=1024),
+        FieldSchema(name="date", dtype=DataType.VARCHAR, max_length=100),
         FieldSchema(name="section_name", dtype=DataType.VARCHAR, max_length=255),
         FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65535),
         FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=EMBEDDING_DIM),
@@ -47,11 +47,13 @@ def create_collection_if_not_exists():
     print(f"✅ Created collection `{COLLECTION_NAME}` with dim={EMBEDDING_DIM}")
 
 
-def insert_chunks(pub_id: str, section_name: str, chunks: list, embeddings: list):
+def insert_chunks(pub_id: str, title: str, date: str, section_name: str, chunks: list, embeddings: list):
     col = Collection(COLLECTION_NAME)
     data = [
-        [str(uuid.uuid4()) for _ in chunks],   # ids
+        [str(uuid.uuid4()) for _ in chunks],
         [str(pub_id) for _ in chunks],
+        [title for _ in chunks],
+        [date for _ in chunks],
         [section_name for _ in chunks],
         chunks,
         embeddings
