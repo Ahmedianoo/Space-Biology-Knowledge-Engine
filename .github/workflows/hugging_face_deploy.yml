@@ -1,5 +1,5 @@
 # .github/workflows/deploy-hf-space.yml
-name: Deploy to Hugging Face Space (Docker, hardcoded creds)
+name: Deploy to Hugging Face Space (Docker; clean push)
 
 on:
   push:
@@ -15,16 +15,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      # --- Hardcoded creds (⚠️ unsafe; prefer GH Secrets) ---
-      - name: Define HF credentials and target
+      # ⚠️ Still insecure to hardcode; best to use GitHub Secrets. But at least this won’t be pushed.
+      - name: Define HF credentials (env only; NOT committed)
         run: |
-          echo "HF_TOKEN=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" >> $GITHUB_ENV
+          echo "HF_TOKEN=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" >> $GITHUB_ENV
           echo "HF_USERNAME=AliNiazi1" >> $GITHUB_ENV
           echo "SPACE_NAME=Nasa-space-apps" >> $GITHUB_ENV
 
-      - name: Add README front-matter
+      # Build a minimal Space payload in a temp folder (no .github/, no tokens)
+      - name: Assemble Space payload (backend + Dockerfile + README)
         run: |
-          cat > README.md <<'EOF'
+          set -euo pipefail
+          rm -rf space_root
+          mkdir -p space_root
+
+          # Copy backend app into payload
+          rsync -a --exclude '.git' backend/ space_root/backend/
+
+          # Create README with Docker SDK + port 7860 (Space config)
+          cat > space_root/README.md <<'EOF'
           ---
           title: Space Biology API
           emoji: 🛰️
@@ -37,39 +46,46 @@ jobs:
           FastAPI backend deployed as a Docker Space.
           EOF
 
-      - name: Add Dockerfile
-        run: |
-          cat > Dockerfile <<'EOF'
+          # Dockerfile: install deps from backend/requirements.txt and run FastAPI on 7860
+          cat > space_root/Dockerfile <<'EOF'
           FROM python:3.11-slim
           RUN useradd -m user
           WORKDIR /app
+
           COPY backend/requirements.txt /app/requirements.txt
           RUN pip install --no-cache-dir -r /app/requirements.txt
+
           COPY . /app
           USER user
+
           EXPOSE 7860
           CMD ["uvicorn", "--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "7860"]
           EOF
 
-      # Install Git LFS (Spaces uses LFS for files >10MB)
+      # (Optional) include any other assets your backend needs:
+      # rsync -a data/ space_root/data/
+
+      # Install Git LFS in case your backend pulls large assets
       - name: Install Git LFS
         run: |
           sudo apt-get update && sudo apt-get install -y git-lfs
           git lfs install
 
-      # Push to the Space repo (use PAT in URL so Git won't prompt)
-      - name: Push to Hugging Face Space
+      # Init a fresh git repo containing ONLY space_root (no secrets)
+      - name: Commit Space payload and push
         env:
           HF_TOKEN: ${{ env.HF_TOKEN }}
           HF_USERNAME: ${{ env.HF_USERNAME }}
           SPACE_NAME: ${{ env.SPACE_NAME }}
         run: |
           set -euo pipefail
+          cd space_root
+          git init
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy to Space"
 
-          git remote remove space 2>/dev/null || true
-          # Embed <username>:<token> in the remote URL (officially supported)
+          # Use token in remote URL to avoid interactive auth
           git remote add space "https://${HF_USERNAME}:${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME}.git"
-
           git push space HEAD:main --force
