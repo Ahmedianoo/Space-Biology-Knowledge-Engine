@@ -23,6 +23,10 @@ class SummaryResponse(BaseModel):
 
 @router.post("/", response_model=dict)
 def get_top_summaries(request: SearchRequest, db: Session = Depends(get_db)):
+    """
+    Returns top 3 relevant summaries for a given query and optional tags.
+    Each summary includes all three role-based summaries.
+    """
     # 1️⃣ Build context-aware query for semantic search
     if request.tags:
         context_string = "The user is interested in publications related to: " + ", ".join(request.tags)
@@ -30,27 +34,26 @@ def get_top_summaries(request: SearchRequest, db: Session = Depends(get_db)):
     else:
         combined_query = request.query
 
-    # 2️⃣ Semantic search on Milvus
+    # 2️⃣ Semantic search on Milvus (top 3 chunks)
     top_chunks = semantic_search(combined_query, top_k=3)
 
     if not top_chunks:
         raise HTTPException(status_code=404, detail="No results found")
 
-    # 3️⃣ Collect publication IDs
-    pub_ids = list(set([c["publication_id"] for c in top_chunks]))
-
-    # 4️⃣ Fetch publications & summaries from DB
-    pubs = db.query(Publication).filter(Publication.id.in_(pub_ids)).all()
-
     response = []
 
-    for pub in pubs:
+    # 3️⃣ For each top chunk, fetch the publication & summaries individually
+    for chunk in top_chunks:
+        pub_id = chunk["publication_id"]
+        pub = db.query(Publication).filter(Publication.id == pub_id).first()
+        if not pub:
+            continue
+
         # Each author is stored 3x, divide to get unique count
         num_authors = len(pub.authors) // 3 if pub.authors else 0
 
-        # Find corresponding summary
+        # Fetch corresponding summary
         summary_obj = db.query(Summary).filter(Summary.publication_id == pub.id).first()
-
         summaries = {}
         if summary_obj:
             summaries = {
