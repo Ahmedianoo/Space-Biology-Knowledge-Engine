@@ -18,14 +18,9 @@ jobs:
       # --- HARD-CODED VALUES (⚠️ anyone with repo read access can see/use these) ---
       - name: Define HF credentials and target
         run: |
-          echo "HF_TOKEN=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" >> $GITHUB_ENV
+          echo "HF_TOKEN=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" >> $GITHUB_ENV
           echo "HF_USERNAME=AliNiazi1" >> $GITHUB_ENV
           echo "SPACE_NAME=Nasa-space-apps" >> $GITHUB_ENV
-
-      # (Optional) hard-code runtime app secrets (NOT recommended)
-      # - name: Bake runtime env (optional, insecure)
-      #   run: |
-      #     echo "GROQ_API_KEY=your_groq_key" >> $GITHUB_ENV
 
       # README front-matter so the Space is recognized as Docker and listens on 7860
       - name: Add README front-matter for Docker Space (temp)
@@ -68,10 +63,26 @@ jobs:
           CMD ["uvicorn", "--app-dir", "backend", "main:app", "--host", "0.0.0.0", "--port", "7860"]
           EOF
 
-      # Push to the Space repo using HF token in an HTTP header
-      - name: Push to Hugging Face Space
+      # === PATCH STARTS HERE ===
+      # Install HF CLI + Git LFS (push/builds require proper auth; LFS for large files)
+      - name: Install huggingface_hub CLI and Git LFS
+        run: |
+          python -m pip install --upgrade pip
+          pip install "huggingface_hub[cli]"
+          sudo apt-get update && sudo apt-get install -y git-lfs
+          git lfs install
+
+      # Log in non-interactively and register token as a Git credential (for Git & LFS)
+      - name: Hugging Face login (Git credential)
         env:
           HF_TOKEN: ${{ env.HF_TOKEN }}
+        run: |
+          echo "${HF_TOKEN}" | huggingface-cli login --token --add-to-git-credential --stdin
+      # === PATCH ENDS HERE ===
+
+      # Push to the Space repo (build will start on HF)
+      - name: Push to Hugging Face Space
+        env:
           HF_USERNAME: ${{ env.HF_USERNAME }}
           SPACE_NAME: ${{ env.SPACE_NAME }}
         run: |
@@ -82,6 +93,4 @@ jobs:
           git remote remove space 2>/dev/null || true
           git remote add space "https://huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME}.git"
 
-          # push HEAD to Space:main with Bearer token auth
-          git -c "http.extraheader=AUTHORIZATION: Bearer ${HF_TOKEN}" \
-              push space HEAD:main --force
+          git push space HEAD:main --force
