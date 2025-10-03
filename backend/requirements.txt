@@ -4,6 +4,12 @@ uvicorn[standard]
 pydantic
 python-dotenv
 
+
+pymilvus
+sentence-transformers
+groq
+
+
 # ---- Database ----
 sqlalchemy
 psycopg2-binary
