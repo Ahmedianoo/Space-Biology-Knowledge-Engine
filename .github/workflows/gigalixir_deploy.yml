@@ -40,11 +40,10 @@ jobs:
       - name: Create Procfile (temp)
         shell: bash
         env:
-          APP_IMPORT: backend.main:app   # change if your entry is different
+          APP_IMPORT: main:app          # backend/main.py defines app
         run: |
-          # Expand ${PORT} at RUNTIME, not now. Default to 4000 if missing.
-          printf '%s\n' "web: bash -lc 'uvicorn ${APP_IMPORT} --host=0.0.0.0 --port=\${PORT:-4000}'" > Procfile
-    
+          printf '%s\n' "web: bash -lc 'uvicorn --app-dir backend ${APP_IMPORT} --host=0.0.0.0 --port=\${PORT:-4000}'" > Procfile
+      
       - name: Temp commit
         run: |
           git config user.name "github-actions[bot]"
