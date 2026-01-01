@@ -64,7 +64,7 @@ Developed during **NASA Space Apps Cairo Hackathon 2025** at Zewail City of Scie
 
 ---
 
-## Installation
+## Run the App
 
 ### Backend
 ```bash
