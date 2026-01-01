@@ -35,14 +35,14 @@ Developed during **NASA Space Apps Cairo Hackathon 2025** at Zewail City of Scie
 ## Screenshots from the Application
 
 ![Flashcards](screenshots/flashcards.jpg)
-![Manager Summary](screenshots/manager summary.jpg)
-![Mission Architect Summary](screenshots/mission architect summary.jpg)
+![Manager Summary](screenshots/manager%20summary.jpg)
+![Mission Architect Summary](screenshots/mission%20architect%20summary.jpg)
 ![Analytics](screenshots/analytics.jpg)
-![Knowledge Graph](screenshots/knowledge graph.jpg)
-![Future Mission Suggestions](screenshots/future mission suggestions.jpg)
-![Future Mission card](screenshots/future mission card.jpg)
+![Knowledge Graph](screenshots/knowledge%20graph.jpg)
+![Future Mission Suggestions](screenshots/future%20mission%20suggestions.jpg)
+![Future Mission card](screenshots/future%20mission%20card.jpg)
 ![Chatbot](screenshots/chatbot.jpg)
-![NASA Resources](screenshots/nasa resources.jpg)
+![NASA Resources](screenshots/nasa%20resources.jpg)
 
 ---
 
