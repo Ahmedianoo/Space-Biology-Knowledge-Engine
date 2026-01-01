@@ -3,7 +3,7 @@
 ## Overview
 Nebulogy is an AI-powered web application that transforms 608 NASA bioscience publications into actionable insights. It allows researchers, managers, and mission architects to efficiently explore role-specific summaries, knowledge graphs, and interactive dashboards.  
 
-Developed during **NASA Space Apps Cairo Hackathon 2025** at Zewail City of Science and Technology.  
+Developed by *Neural Explorers* during **NASA Space Apps Cairo Hackathon 2025** at Zewail City of Science and Technology.  
 
 ---
 
