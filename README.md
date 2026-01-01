@@ -12,6 +12,7 @@ Developed during **NASA Space Apps Cairo Hackathon 2025** at Zewail City of Scie
    - **Scientist:** methods, results, hypotheses
    - **Manager:** broader impacts, investment potential
    - **Mission Architect:** risks, requirements, insights
+     
    Each flashcard links to the original NASA page.
 
 2. **Review Insights:** Users can explore synthesized insights from hundreds of publications, from research recommendations to knowledge gaps, conflicts, and suggested future missions.
